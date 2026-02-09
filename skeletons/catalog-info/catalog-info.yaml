@@ -1,0 +1,66 @@
+{%- if values.componentName %}
+  {%- set name = values.componentName %}
+{%- else %}
+  {%- set name = values.repoName %}
+{% endif -%}
+
+apiVersion: backstage.io/v1alpha1
+{%- if values.entityKind %}
+kind: ${{ values.entityKind }}
+{%- else %}
+kind: Component
+{%- endif %}
+metadata:
+  name: ${{ name }}
+  {%- if values.title %}
+  title: ${{ values.title }}
+  {%- endif %}
+  {%- if values.description %}
+  description: ${{ values.description }}
+  {%- endif %}
+  annotations:
+    {%- if values.ci == "../../../skeletons/tekton/" %}
+    tektonci/build-namespace: ${{ values.namespace }}
+    janus-idp.io/tekton: ${{ name }}
+    {%- endif %}
+    argocd/app-selector: rht-gitops.com/janus-argocd=${{ name }}-bootstrap
+    backstage.io/kubernetes-id: ${{ name }}
+    backstage.io/techdocs-ref: dir:.
+    terraform/organization: ${{ values.terraformOrganization }}
+    terraform/workspaces: ${{ values.terraformWorkspace }}
+    {%- if values.sourceControl == "gitlab.com" %}
+    gitlab.com/project-slug: ${{ values.orgName }}/${{ values.repoName }}
+    {%- elif values.sourceControl == "github.com" %}
+    github.com/project-slug: ${{ values.orgName }}/${{ values.repoName }}
+    {%- elif values.sourceControl == "dev.azure.com" %}
+    dev.azure.com/project-repo: ${{ values.orgName }}/${{ values.repoName }}
+    {%- endif %}
+    {%- if values.imageRegistry == "Quay" %}
+    quay.io/repository-slug: quayadmin/${{ name }}
+    {%- endif %}
+  links:
+    - url: https://devspaces${{ values.clusterDomainUrl }}/#https://${{ values.sourceControl }}/${{ values.orgName }}/${{ values.repoName }}
+      title: OpenShift Dev Spaces (VS Code editor)
+      icon: web           
+    - url: https://${{ name }}-${{ name }}-dev${{ values.clusterDomainUrl }}/actuator
+      title: Application
+      icon: web  
+spec:
+  type: ${{ values.applicationType }}
+  {%- if values.system %}
+  system: ${{ values.system }}
+  {%- endif %}
+  {%- if values.lifecycle %}
+  lifecycle: ${{ values.lifecycle }}
+  {%- else %}
+  lifecycle: production
+  {%- endif %}
+  owner: ${{ values.owner }}
+  {%- if values.dependsOn %}
+  dependsOn:
+    - ${{ values.dependsOn }}
+  {%- endif %}
+  {%- if values.partOf %}
+  partOf:
+    - ${{ values.partOf }}
+  {%- endif %}

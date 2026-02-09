@@ -1,0 +1,345 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: fpl-demo-template
+  title: Spring boot java application with DynamoDB
+  description: This template will create a Spring Boot application with DynamoDB as database and all the necessary resources to deploy it in a Kubernetes cluster using GitOps practices. It also includes the option to create a CI pipeline for the application based on GitHub Actions or Tekton.
+  thumbnail: https://raw.githubusercontent.com/keptn/keptn/main/docs/images/keptn-logo.png
+  tags:
+    - aws
+    - dynamodb
+    - database
+spec:
+  owner: rhdh
+  type: service
+
+  parameters:     
+    - title: Provide Application Info
+      required:
+        - componentId
+        - javaPackageName
+        - groupId
+        - artifactId
+        - description
+      properties:
+        componentId:
+          title: Component Name
+          description: Unique name for this component used across all resources created for this application
+          type: string
+        javaPackageName:
+          title: Java Package Name
+          description: Base package name for the generated Java code
+          type: string
+          default: com.example.hello
+        groupId:
+          title: Group Id
+          description: Group Id for the generated Maven project
+          type: string
+          default: com.example
+        artifactId:
+          title: Artifact Id
+          description: Artifact Id for the generated Maven project
+          type: string
+          default: hello-spring-cloud
+        description:
+          title: Description
+          type: string
+          description: Help others understand what this component is for
+
+    - title: Provide Application Additional Info
+      required:
+        - orgName
+        - repoName
+        - owner
+        - system
+        - port
+      properties:
+        orgName:
+          title: Git Organization Name
+          type: string
+        repoName:
+          title: Git Repository Name
+          description: Unique name for this app git repository
+          default: hello-spring-cloud
+          type: string
+        description:
+          title: Description
+          type: string
+          description: Help others understand what this component is for
+        owner:
+          title: Git Owner
+          type: string
+          ui:field: EntityPicker
+          ui:options:
+            catalogFilter:
+              kind:
+                - Group
+                - User
+        system:
+          title: Backstage System Entity
+          type: string
+          ui:field: EntityPicker
+          ui:options:
+            catalogFilter:
+              kind:
+                - System
+        port:
+          title: Port
+          type: number
+          default: 8080
+          description: Override the port exposed for the application
+   
+    - title: Terraform Organization and workspace information
+      required:
+        - terraformOrganization
+        - terraformWorkspace
+      properties:
+        terraformOrganization:
+          title: Terraform Cloud Organization Name
+          type: string
+          description: The name of the Terraform Cloud organization where the workspace for this application will be created
+          default: hashicorp-wwtfo-demo-platform-prod
+        terraformWorkspace:
+          title: Terraform Cloud Workspace Name
+          type: string
+          description: The name of the Terraform Cloud workspace that will be created for this application. It
+            should be unique across the Terraform Cloud organization and ideally should follow a naming convention that allows easy identification of the application it belongs to (e.g., using the application name as part of the workspace name).
+          default: tfc-guide-example
+
+    - title: Provide information about the Infra dynamodb table
+      required:
+        - tableName
+        - readCapacity
+        - writeCapacity
+        - terraformRepoOrganization
+        - terraformRepoName
+      properties:
+        tableName:
+          title: Table Name
+          type: string
+          description: Unique name for your DynamoDB table.
+        readCapacity:
+          title: Read Capacity Units (RCU)
+          type: integer
+          default: 5
+          minimum: 1
+          description: Number of strongly consistent reads per second.
+        writeCapacity:
+          title: Write Capacity Units (WCU)
+          type: integer
+          default: 5
+          minimum: 1
+          description: Number of writes per second.
+        terraformRepoOrganization:
+          title: Terraform Repo Organization
+          type: string
+          description: The GitHub organization where the repository for the Terraform code will be created. This should be the same organization as the one used for the application repository.
+          default: ramonehc
+        terraformRepoName:
+          title: Terraform Repo Name
+          type: string
+          description: Unique name for the git repository where the Terraform code for provisioning the DynamoDB table will be stored. This repository will be created under the same organization as the application repository and with the same visibility settings.
+          default: "tfc-guide-example"
+
+
+    - title: Provide information about the CI method
+      required:
+        - ci
+      properties:
+        ci:
+          title: Select a CI method
+          type: string
+          description: This action will create a CI pipeline for your application based on chosen method
+          default: ../../../skeletons/github-actions/
+          enum:
+            - ../../../skeletons/github-actions/
+            - ../../../skeletons/tekton/
+          enumNames:
+            - GitHub Action
+            - Tekton
+      dependencies:
+        ci:
+          oneOf:
+            - properties:
+                # Show no extra properties when GitHub Actions is selected
+                ci:
+                  const: ../../../skeletons/github-actions/
+            - required:
+                - image_registry
+                - image_host
+                - image_organization
+                - cluster_domain_url
+                - namespace
+              properties:
+                cluster_domain_url:
+                  title: Cluster Domain Url
+                  type: string
+                  description: The Cluster Domain URL where the aplication will be deployed to (usually starts with '.apps')
+                  default: '.apps.cluster-6kknq.6kknq.sandbox63.opentlc.com'
+                namespace:
+                  title: Project Namespace
+                  type: string
+                  description: The Project Namespace for deploying resources to the cluster
+                  default: hello-spring-cloud
+                ci:
+                  const: ../../../skeletons/tekton/
+                image_registry:
+                  title: Image Registry
+                  type: string
+                  enum:
+                    - Openshift
+                    - Quay
+              dependencies:
+                image_registry:
+                  oneOf:
+                    - properties:
+                        image_registry:
+                          enum:
+                            - Openshift
+                        image_host:
+                          title: Image Host
+                          type: string
+                          description: Host for storing image
+                          default: image-registry.openshift-image-registry.svc:5000
+                    - properties:
+                        image_registry:
+                          enum:
+                            - Quay
+                        image_host:
+                          title: Image Host
+                          type: string
+                          description: Host for storing image
+                          default: quay.io
+                        image_organization:
+                          title: Registry Organization
+                          type: string
+                          description: Name of the Quay Organization
+
+  steps:
+    - id: template-code-repo
+      name: Generating Deployment Resources
+      action: fetch:template
+      input:
+        url: ./skeleton
+        copyWithoutTemplating: []
+        values: ${{ parameters }}
+        targetPath: ./code
+
+    - id: catalogTemplate
+      name: Generating the Catalog Info Component
+      action: fetch:template
+      input:
+        url: ../../../skeletons/catalog-info/
+        values:
+          terraformOrganization: ${{ parameters.terraformOrganization }}
+          terraformWorkspace: ${{ parameters.terraformWorkspace }}
+          name: ${{ parameters.componentId }}
+          orgName: ${{ parameters.orgName }}
+          repoName: ${{ parameters.repoName }}
+          owner: ${{ parameters.owner }}
+          system: ${{ parameters.system }}
+          applicationType: service
+          description: ${{ parameters.description }}
+          namespace: ${{ parameters.namespace }}-dev
+          ci: ${{ parameters.ci }}
+          artifactId: ${{ parameters.artifactId }}
+          sourceControl: github.com # If using a Hosted Enterprise GithHub replace with your internal domain
+          imageRegistry: ${{ parameters.image_registry }}
+          imageOrganization: ${{ parameters.image_organization }}
+          imageName: ${{ parameters.artifactId }}
+          clusterDomainUrl: ${{ parameters.cluster_domain_url }}
+
+    - id: template-infra-repo
+      name: Generating Deployment Resources
+      action: fetch:template
+      input:
+        url: ../../terraform
+        copyWithoutTemplating: []
+        values: 
+          tableName: ${{ parameters.tableName }}
+          readCapacity: ${{ parameters.readCapacity }}
+          writeCapacity: ${{ parameters.writeCapacity }}
+        targetPath: ./infra
+
+    - id: publish-infra-repo-via-pull-request
+      name: Create Infra Repository via Pull Request
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?owner=${{ parameters.terraformRepoOrganization }}&repo=${{ parameters.terraformRepoName }}
+        branchName: main
+        title: Terraform code for provisioning DynamoDB table for ${{ parameters.componentId }}
+        description: This PR includes the Terraform code for provisioning a DynamoDB table for the application ${{ parameters.componentId }}. The PR will trigger the creation of a Terraform Cloud workspace and the execution of the Terraform code to provision the DynamoDB table with the specified configuration.
+        sourcePath: ./infra
+    
+    - id: publish-code-repo
+      name: Create Manifest Repository
+      action: publish:github
+      input:
+        repoUrl: github.com?owner=${{ parameters.orgName }}&repo=${{ parameters.repoName }}-gitops.git
+        title: gitops resources for ${{ parameters.componentId }}
+        description: gitops resources for ${{ parameters.componentId }}
+        sourcePath: ./code
+        repoVisibility: public
+        protectDefaultBranch: false
+    
+    - id: template-gitops-deployment
+      name: Generating Deployment Resources
+      action: fetch:template
+      input:
+        url: ./manifests
+        copyWithoutTemplating: []
+        values:
+          component_id: ${{ parameters.componentId }}
+          destination: https://github.com/${{ parameters.orgName }}/${{ parameters.repoName }}-gitops
+          source_repository: https://github.com/${{ parameters.orgName }}/${{ parameters.repoName }}
+          repository_name: ${{ parameters.repoName }}
+          git_owner: ${{ parameters.orgName }}
+          cluster: ${{ parameters.cluster_domain_url }}
+          namespace: ${{ parameters.namespace }}-dev
+          image_registry: ${{ parameters.image_registry }}
+          image_host: ${{ parameters.image_host }}
+          image_organization: ${{ parameters.image_organization }}
+          image_name: ${{ parameters.artifactId }}
+          port: ${{ parameters.port }}
+        targetPath: ./tenant-gitops
+
+    - id: publish-gitops
+      name: Create Manifest Repository
+      action: publish:github
+      input:
+        repoUrl: github.com?owner=${{ parameters.orgName }}&repo=${{ parameters.repoName }}-gitops.git
+        title: gitops resources for ${{ parameters.componentId }}
+        description: gitops resources for ${{ parameters.componentId }}
+        sourcePath: ./tenant-gitops
+        repoVisibility: public
+        protectDefaultBranch: false
+
+    - id: create-argocd-resources
+      name: Create ArgoCD Resources
+      action: argocd:create-resources
+      input:
+        appName: ${{ parameters.componentId }}-bootstrap
+        argoInstance: main
+        namespace: janus-argocd
+        repoUrl:  https://github.com/${{ parameters.orgName }}/${{
+          parameters.componentId }}-gitops.git
+        path: argocd/
+
+  output:
+    links:
+      - title: Open the Source Code Repository
+        url: ${{ steps.publish.output.remoteUrl }}
+      - title: Open the Catalog Info Component
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}
+    text:
+      - title: Register you Application After you merge the PR
+        content: |
+          #Required manual steps
+          * Go to `${{ parameters.codeRepoName }}` and grab the URL of catalog-info.yaml
+          * Register this component as part of PCF Migration
+      - title: Additional information
+        content: |
+          #Required manual steps
+          * Go to `${{ parameters.image_host }}` and create a new image repository in your Container Registry named `${{ parameters.artifactId }}` under the `${{ parameters.image_organization }}` organization.
+          > If created as private repo remember to grant permissions to the registry user supposed to push/pull images from this repository.
