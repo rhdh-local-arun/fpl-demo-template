@@ -299,10 +299,10 @@ spec:
         sourcePath: ./infra
     
     - id: publish-code-repo
-      name: Create Manifest Repository
+      name: Create Code Repository
       action: publish:github
       input:
-        repoUrl: github.com?owner=${{ parameters.orgName }}&repo=${{ parameters.repoName }}-gitops.git
+        repoUrl: github.com?owner=${{ parameters.orgName }}&repo=${{ parameters.repoName }}.git
         description: gitops resources for ${{ parameters.componentId }}
         sourcePath: ./code
         repoVisibility: public
