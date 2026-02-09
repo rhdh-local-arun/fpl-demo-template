@@ -2,13 +2,19 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: fpl-demo-template
-  title: Spring boot java application with DynamoDB
+  title: FPL Demo Template Create Spring boot java application with DynamoDB and provision infra using Terraform
   description: This template will create a Spring Boot application with DynamoDB as database and all the necessary resources to deploy it in a Kubernetes cluster using GitOps practices. It also includes the option to create a CI pipeline for the application based on GitHub Actions or Tekton.
   thumbnail: https://raw.githubusercontent.com/keptn/keptn/main/docs/images/keptn-logo.png
   tags:
     - aws
     - dynamodb
     - database
+    - terraform
+    - kubernetes
+    - ci
+    - gitops
+    - springboot
+    - java
 spec:
   owner: rhdh
   type: service
