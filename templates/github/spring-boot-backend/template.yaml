@@ -217,7 +217,7 @@ spec:
 
   steps:
     - id: template-code-repo
-      name: Generating Deployment Resources
+      name: Generating Code Repository
       action: fetch:template
       input:
         url: ./skeleton
@@ -250,7 +250,7 @@ spec:
           clusterDomainUrl: ${{ parameters.cluster_domain_url }}
 
     - id: template-infra-repo
-      name: Generating Deployment Resources
+      name: Generating Terraform Resources
       action: fetch:template
       input:
         url: ../../terraform
@@ -261,27 +261,6 @@ spec:
           writeCapacity: ${{ parameters.writeCapacity }}
         targetPath: ./infra
 
-    - id: publish-infra-repo-via-pull-request
-      name: Create Infra Repository via Pull Request
-      action: publish:github:pull-request
-      input:
-        repoUrl: github.com?owner=${{ parameters.terraformRepoOrganization }}&repo=${{ parameters.terraformRepoName }}
-        branchName: main
-        title: Terraform code for provisioning DynamoDB table for ${{ parameters.componentId }}
-        description: This PR includes the Terraform code for provisioning a DynamoDB table for the application ${{ parameters.componentId }}. The PR will trigger the creation of a Terraform Cloud workspace and the execution of the Terraform code to provision the DynamoDB table with the specified configuration.
-        sourcePath: ./infra
-    
-    - id: publish-code-repo
-      name: Create Manifest Repository
-      action: publish:github
-      input:
-        repoUrl: github.com?owner=${{ parameters.orgName }}&repo=${{ parameters.repoName }}-gitops.git
-        title: gitops resources for ${{ parameters.componentId }}
-        description: gitops resources for ${{ parameters.componentId }}
-        sourcePath: ./code
-        repoVisibility: public
-        protectDefaultBranch: false
-    
     - id: template-gitops-deployment
       name: Generating Deployment Resources
       action: fetch:template
@@ -301,29 +280,48 @@ spec:
           image_organization: ${{ parameters.image_organization }}
           image_name: ${{ parameters.artifactId }}
           port: ${{ parameters.port }}
-        targetPath: ./tenant-gitops
+        targetPath: ./tenant-gitops    
 
+    - id: publish-infra-repo-via-pull-request
+      name: Create Pull Request for Terraform Repository
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?owner=${{ parameters.terraformRepoOrganization }}&repo=${{ parameters.terraformRepoName }}
+        branchName: main
+        title: Terraform code for provisioning DynamoDB table for ${{ parameters.componentId }}
+        description: This PR includes the Terraform code for provisioning a DynamoDB table for the application ${{ parameters.componentId }}. The PR will trigger the creation of a Terraform Cloud workspace and the execution of the Terraform code to provision the DynamoDB table with the specified configuration.
+        sourcePath: ./infra
+    
+    - id: publish-code-repo
+      name: Create Manifest Repository
+      action: publish:github
+      input:
+        repoUrl: github.com?owner=${{ parameters.orgName }}&repo=${{ parameters.repoName }}-gitops.git
+        description: gitops resources for ${{ parameters.componentId }}
+        sourcePath: ./code
+        repoVisibility: public
+        protectDefaultBranch: false
+ 
     - id: publish-gitops
       name: Create Manifest Repository
       action: publish:github
       input:
         repoUrl: github.com?owner=${{ parameters.orgName }}&repo=${{ parameters.repoName }}-gitops.git
-        title: gitops resources for ${{ parameters.componentId }}
         description: gitops resources for ${{ parameters.componentId }}
         sourcePath: ./tenant-gitops
         repoVisibility: public
         protectDefaultBranch: false
 
-    - id: create-argocd-resources
-      name: Create ArgoCD Resources
-      action: argocd:create-resources
-      input:
-        appName: ${{ parameters.componentId }}-bootstrap
-        argoInstance: main
-        namespace: janus-argocd
-        repoUrl:  https://github.com/${{ parameters.orgName }}/${{
-          parameters.componentId }}-gitops.git
-        path: argocd/
+    # - id: create-argocd-resources
+    #   name: Create ArgoCD Resources
+    #   action: argocd:create-resources
+    #   input:
+    #     appName: ${{ parameters.componentId }}-bootstrap
+    #     argoInstance: main
+    #     namespace: janus-argocd
+    #     repoUrl:  https://github.com/${{ parameters.orgName }}/${{
+    #       parameters.componentId }}-gitops.git
+    #     path: argocd/
 
   output:
     links:
