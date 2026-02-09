@@ -140,7 +140,7 @@ spec:
           title: Terraform Repo Organization
           type: string
           description: The GitHub organization where the repository for the Terraform code will be created. This should be the same organization as the one used for the application repository.
-          default: ramonehc
+          default: rhdh-local-arun
         terraformRepoName:
           title: Terraform Repo Name
           type: string
@@ -236,6 +236,8 @@ spec:
       action: fetch:template
       input:
         url: ../../../skeletons/catalog-info/
+        targetPath: ./code/catalog-info.yaml
+        copyWithoutTemplating: []
         values:
           terraformOrganization: ${{ parameters.terraformOrganization }}
           terraformWorkspace: ${{ parameters.terraformWorkspace }}
