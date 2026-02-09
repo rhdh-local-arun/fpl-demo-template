@@ -46,7 +46,7 @@ spec:
           title: Artifact Id
           description: Artifact Id for the generated Maven project
           type: string
-          default: hello-spring-cloud
+          default: fpl-demo
         description:
           title: Description
           type: string
@@ -66,7 +66,7 @@ spec:
         repoName:
           title: Git Repository Name
           description: Unique name for this app git repository
-          default: hello-spring-cloud
+          default: fpl-demo
           type: string
         description:
           title: Description
@@ -186,7 +186,7 @@ spec:
                   title: Project Namespace
                   type: string
                   description: The Project Namespace for deploying resources to the cluster
-                  default: hello-spring-cloud
+                  default: fpl-demo
                 ci:
                   const: ../../../skeletons/tekton/
                 image_registry:
