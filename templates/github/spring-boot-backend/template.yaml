@@ -236,7 +236,7 @@ spec:
       action: fetch:template
       input:
         url: ../../../skeletons/catalog-info/
-        targetPath: ./code/catalog-info.yaml
+        targetPath: ./code
         copyWithoutTemplating: []
         values:
           terraformOrganization: ${{ parameters.terraformOrganization }}
