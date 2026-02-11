@@ -300,7 +300,7 @@ spec:
         description: This PR includes the Terraform code for provisioning a DynamoDB table for the application ${{ parameters.componentId }}. The PR will trigger the creation of a Terraform Cloud workspace and the execution of the Terraform code to provision the DynamoDB table with the specified configuration.
         sourcePath: ./infra
     
-    - id: publish-code-repo
+    - id: publish
       name: Create Code Repository
       action: publish:github
       input:
@@ -324,7 +324,7 @@ spec:
       name: Register the Component in Backstage Catalog
       action: catalog:register
       input:
-        repoContentsUrl: ${{ steps.["publish-code-repo"].output.repoContentsUrl }}
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
         catalogInfoPath: "./code/catalog-info.yaml"
 
     - id: create-argocd-resources
