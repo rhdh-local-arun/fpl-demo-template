@@ -290,6 +290,16 @@ spec:
           port: ${{ parameters.port }}
         targetPath: ./tenant-gitops    
 
+    - id: publish
+      name: Create Code Repository
+      action: publish:github
+      input:
+        repoUrl: github.com?owner=${{ parameters.orgName }}&repo=${{ parameters.repoName }}.git
+        description: gitops resources for ${{ parameters.componentId }}
+        sourcePath: ./code
+        repoVisibility: public
+        protectDefaultBranch: false     
+
     - id: publish-infra-repo-via-pull-request
       name: Create Pull Request for Terraform Repository
       action: publish:github:pull-request
@@ -300,15 +310,7 @@ spec:
         description: This PR includes the Terraform code for provisioning a DynamoDB table for the application ${{ parameters.componentId }}. The PR will trigger the creation of a Terraform Cloud workspace and the execution of the Terraform code to provision the DynamoDB table with the specified configuration.
         sourcePath: ./infra
     
-    - id: publish
-      name: Create Code Repository
-      action: publish:github
-      input:
-        repoUrl: github.com?owner=${{ parameters.orgName }}&repo=${{ parameters.repoName }}.git
-        description: gitops resources for ${{ parameters.componentId }}
-        sourcePath: ./code
-        repoVisibility: public
-        protectDefaultBranch: false
+
  
     - id: publish-gitops
       name: Create Manifest Repository
