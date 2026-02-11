@@ -345,14 +345,4 @@ spec:
       - title: Open the Catalog Info Component
         icon: catalog
         entityRef: ${{ steps.register.output.entityRef }}
-    text:
-      - title: Register you Application After you merge the PR
-        content: |
-          #Required manual steps
-          * Go to `${{ parameters.codeRepoName }}` and grab the URL of catalog-info.yaml
-          * Register this component as part of PCF Migration
-      - title: Additional information
-        content: |
-          #Required manual steps
-          * Go to `${{ parameters.image_host }}` and create a new image repository in your Container Registry named `${{ parameters.artifactId }}` under the `${{ parameters.image_organization }}` organization.
-          > If created as private repo remember to grant permissions to the registry user supposed to push/pull images from this repository.
+  
