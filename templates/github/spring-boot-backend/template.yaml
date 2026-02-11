@@ -327,7 +327,7 @@ spec:
       action: catalog:register
       input:
         repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
-        catalogInfoPath: "./code/catalog-info.yaml"
+        catalogInfoPath: "/catalog-info.yaml"
 
     - id: create-argocd-resources
       name: Create ArgoCD Resources
