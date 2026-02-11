@@ -320,16 +320,23 @@ spec:
         repoVisibility: public
         protectDefaultBranch: false
 
-    # - id: create-argocd-resources
-    #   name: Create ArgoCD Resources
-    #   action: argocd:create-resources
-    #   input:
-    #     appName: ${{ parameters.componentId }}-bootstrap
-    #     argoInstance: main
-    #     namespace: janus-argocd
-    #     repoUrl:  https://github.com/${{ parameters.orgName }}/${{
-    #       parameters.componentId }}-gitops.git
-    #     path: argocd/
+    - id: register
+      name: Register the Component in Backstage Catalog
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: "./code/catalog-info.yaml"
+
+    - id: create-argocd-resources
+      name: Create ArgoCD Resources
+      action: argocd:create-resources
+      input:
+        appName: ${{ parameters.componentId }}-bootstrap
+        argoInstance: main
+        namespace: janus-argocd
+        repoUrl:  https://github.com/${{ parameters.orgName }}/${{
+          parameters.componentId }}-gitops.git
+        path: argocd/
 
   output:
     links:
